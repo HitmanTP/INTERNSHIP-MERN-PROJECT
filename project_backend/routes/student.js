@@ -40,3 +40,18 @@ router.get('/my-courses', (req, res) => {
         res.send(result.createResult(error, data));
     });
 });
+
+
+
+// Get My Course Videos (Student)
+router.get('/my-course-with-videos', (req, res) => {
+    const uid = req.headers.uid;
+    const sql = `SELECT c.course_name, v.title, v.youtube_url 
+                 FROM courses c 
+                 JOIN enrollments e ON c.course_id = e.course_id 
+                 LEFT JOIN videos v ON c.course_id = v.course_id
+                 WHERE e.student_id = ?`;
+    pool.query(sql, [uid], (error, data) => {
+        res.send(result.createResult(error, data));
+    });
+});

@@ -55,3 +55,17 @@ router.get('/my-course-with-videos', (req, res) => {
         res.send(result.createResult(error, data));
     });
 });
+
+// ADMIN ONLY: Get Enrolled Students
+router.get('/admin/enrolled-students', checkAdmin, (req, res) => {
+    const { courseId } = req.query;
+    const sql = `SELECT u.name, u.email, u.mobile 
+                 FROM users u 
+                 JOIN enrollments e ON u.uid = e.student_id 
+                 WHERE e.course_id = ?`;
+    pool.query(sql, [courseId], (error, data) => {
+        res.send(result.createResult(error, data));
+    });
+});
+
+module.exports = router;

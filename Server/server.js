@@ -1,4 +1,6 @@
 const express = require('express');
+const cors = require('cors');
+const path = require('path'); 
 
 // Routers
 const userRouter = require('./routes/user');
@@ -6,20 +8,27 @@ const courseRouter = require('./routes/course');
 const videoRouter = require('./routes/video');
 const studentRouter = require('./routes/student');
 
-// Middleware
+// 1. IMPORT THE CRON JOB
+const startVideoCleanupJob = require('./utils/cronJobs');
+
 const app = express();
-const authUser = require('./utils/auth');
+
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-// Apply Authentication Globally
-app.use(authUser);
+// Serve Static Images
+app.use(express.static('uploads'));
 
-// Mount Routes
+// Routes
 app.use('/user', userRouter);
 app.use('/course', courseRouter);
 app.use('/video', videoRouter);
 app.use('/student', studentRouter);
 
-app.listen(4000, 'localhost', () => {
+// 2. START THE SCHEDULER
+startVideoCleanupJob();
+
+app.listen(4000, '0.0.0.0', () => {
     console.log('Server is running on port 4000');
 });

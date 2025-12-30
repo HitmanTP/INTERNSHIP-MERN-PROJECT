@@ -1,69 +1,65 @@
 const express = require('express');
-const cryptojs = require('crypto-js');
 const pool = require('../db/pool');
 const result = require('../utils/result');
-const checkAdmin = require('../utils/checkAdmin');
+const authUser = require('../utils/auth');
 
 const router = express.Router();
 
-// Register to Course (Student)
-router.post('/register-to-course', (req, res) => {
-    const uid = req.headers.uid; 
-    const { courseId } = req.body;
-    const sql = `INSERT INTO enrollments (student_id, course_id) VALUES (?, ?)`;
-    pool.query(sql, [uid, courseId], (error, data) => {
-        res.send(result.createResult(error, data));
-    });
-});
+// Register to Course
+router.post('/register-to-course', authUser, (req, res) => {
+    // ---------------------------------------------------------
+    // DEBUG LOGS (Check terminal when you click Enroll)
+    // ---------------------------------------------------------
+    console.log("------------------------------------------");
+    console.log("ENROLL REQUEST RECEIVED");
+    console.log("Token Payload (req.user):", req.user);
+    
+    // 1. Get User ID safely (Handles 'id' OR 'user_id')
+    const userId = req.user.id || req.user.user_id;
 
-// Change Password (Student)
-router.put('/change-password', (req, res) => {
-    const uid = req.headers.uid;
-    const { newPassword, confirmPassword } = req.body;
-    if (newPassword !== confirmPassword) {
-        return res.send(result.createResult("Passwords do not match"));
+    if (!userId) {
+        console.log("ERROR: Token does not contain an ID!");
+        return res.status(500).send(result.createResult("User ID missing from token"));
     }
-    const hashedPassword = cryptojs.SHA256(newPassword).toString();
-    const sql = `UPDATE users SET password = ? WHERE uid = ?`;
-    pool.query(sql, [hashedPassword, uid], (error, data) => {
-        res.send(result.createResult(error, data));
+
+    const { courseId } = req.body;
+    console.log(`Enrolling User [${userId}] into Course [${courseId}]`);
+
+    // 2. Check Database
+    const checkSql = `SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?`;
+    pool.query(checkSql, [userId, courseId], (error, data) => {
+        if (error) {
+            console.log("DB CHECK ERROR:", error);
+            return res.send(result.createResult(error, data));
+        } 
+        
+        if (data && data.length > 0) {
+            console.log("User already enrolled.");
+            return res.send(result.createResult("You have already enrolled in this course"));
+        } 
+
+        // 3. Insert Enrollment
+        const insertSql = `INSERT INTO enrollments (user_id, course_id) VALUES (?, ?)`;
+        pool.query(insertSql, [userId, courseId], (insertError, insertData) => {
+            if (insertError) {
+                console.log("DB INSERT ERROR:", insertError);
+                return res.send(result.createResult(insertError, insertData));
+            }
+            console.log("SUCCESS: Enrollment Saved!");
+            res.send(result.createResult(null, insertData));
+        });
     });
 });
 
-// Get My Courses (Student)
-router.get('/my-courses', (req, res) => {
-    const uid = req.headers.uid;
+// Get My Courses
+router.get('/my-courses', authUser, (req, res) => {
+    // FIX: Match the ID logic here too
+    const userId = req.user.id || req.user.user_id;
+    
     const sql = `SELECT c.* FROM courses c 
-                 JOIN enrollments e ON c.course_id = e.course_id 
-                 WHERE e.student_id = ?`;
-    pool.query(sql, [uid], (error, data) => {
-        res.send(result.createResult(error, data));
-    });
-});
-
-
-
-// Get My Course Videos (Student)
-router.get('/my-course-with-videos', (req, res) => {
-    const uid = req.headers.uid;
-    const sql = `SELECT c.course_name, v.title, v.youtube_url 
-                 FROM courses c 
-                 JOIN enrollments e ON c.course_id = e.course_id 
-                 LEFT JOIN videos v ON c.course_id = v.course_id
-                 WHERE e.student_id = ?`;
-    pool.query(sql, [uid], (error, data) => {
-        res.send(result.createResult(error, data));
-    });
-});
-
-// ADMIN ONLY: Get Enrolled Students
-router.get('/admin/enrolled-students', checkAdmin, (req, res) => {
-    const { courseId } = req.query;
-    const sql = `SELECT u.name, u.email, u.mobile 
-                 FROM users u 
-                 JOIN enrollments e ON u.uid = e.student_id 
-                 WHERE e.course_id = ?`;
-    pool.query(sql, [courseId], (error, data) => {
+                 JOIN enrollments e ON c.id = e.course_id 
+                 WHERE e.user_id = ?`;
+    pool.query(sql, [userId], (error, data) => {
         res.send(result.createResult(error, data));
     });
 });

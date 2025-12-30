@@ -1,68 +1,135 @@
+/* src/index.css */
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* --- LIGHT THEME (Strictly Preserved) --- */
+  --bg-dark: #F0F9FF;       /* Main Background: Light Pastel Blue */
+  --bg-card: #FFFFFF;       /* Card Background: Pure White */
+  
+  --accent: #2563EB;        /* Accent: Vibrant Blue */
+  --accent-hover: #1D4ED8;  
+  
+  --text-main: #334155;     /* Dark Slate */
+  --text-header: #1E293B;   /* Darker Slate for Headings */
+  --text-muted: #64748b;    /* Muted Blue-Grey */
+  --text-highlight: #4F46E5; /* Indigo for highlights */
+  
+  --navbar-bg: #F0F9FF;     
+  --border-color: #CBD5E1;  
+  
+  /* Landing Page Specifics (Moved from inline styles) */
+  --hero-bg: linear-gradient(135deg, #E9D5FF 0%, #BAE6FD 50%, #FFDAB9 100%);
+  --hero-shadow: 0 10px 30px rgba(186, 230, 253, 0.4);
+  --btn-glass-text: #1E293B;
+  --btn-glass-border: #1E293B;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* --- DARK THEME (Professional Carbon Edition) --- */
+[data-theme="dark"] {
+  /* 1. Backgrounds: Professional Deep Carbon (Not harsh black) */
+  --bg-dark: #0b0f19;       /* Very deep cool gray */
+  --bg-card: #151e2c;       /* Slightly lighter for cards */
+  
+  /* 2. Text: Soft White (Easy on eyes) */
+  --text-main: #E2E8F0;     /* Slate 200 */
+  --text-header: #F8FAFC;   /* Slate 50 */
+  --text-muted: #94A3B8;    /* Slate 400 */
+  --text-highlight: #818CF8; /* Lighter Indigo for dark mode */
+  
+  /* 3. Accents: Controlled Blue */
+  --accent: #3B82F6;        
+  --accent-hover: #60A5FA;  
+  
+  --navbar-bg: rgba(11, 15, 25, 0.95); /* Semi-transparent background */
+  --border-color: #1e293b;  /* Subtle dark border */
+
+  /* Landing Page Specifics (Dark Mode) */
+  /* Deep Space Gradient */
+  --hero-bg: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+  --hero-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --btn-glass-text: #E2E8F0;
+  --btn-glass-border: #E2E8F0;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  background-color: var(--bg-dark) !important;
+  color: var(--text-main) !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* --- CARDS --- */
+.card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.15); 
+  border-color: var(--accent) !important;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* --- NAVBAR --- */
+.navbar {
+  background-color: var(--navbar-bg) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.3s ease;
+}
+
+.navbar-brand, .nav-link {
+  color: var(--text-main) !important;
+  transition: color 0.2s;
+}
+
+.navbar-brand:hover, .nav-link:hover, .active {
+  color: var(--accent) !important;
+}
+
+/* --- BUTTONS --- */
+.btn-primary, .btn-success {
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover)) !important;
+  border: none !important;
+  color: #FFFFFF !important; /* Always white text on filled buttons */
+  font-weight: 600;
+}
+
+.btn-primary:hover, .btn-success:hover {
+  opacity: 0.95;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+.btn-outline-secondary, .btn-outline-light, .btn-outline-dark {
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--bg-card) !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+/* --- FORMS --- */
+.form-control, .form-select {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important; 
+  border-color: var(--accent) !important;
+}
+
+.form-control::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* --- TEXT UTILS --- */
+.text-muted {
+  color: var(--text-muted) !important;
 }

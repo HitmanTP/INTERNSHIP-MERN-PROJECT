@@ -4,38 +4,27 @@ const jwt = require('jsonwebtoken');
 const pool = require('../db/pool');
 const result = require('../utils/result');
 const config = require('../utils/config');
-
-const router = express.Router();
-
-router.post('/signup', (req, res) => {
-    // 1. Accept 'role' from the request body
-    const { name, email, password, mobile, role } = req.body;
-    
-    // const express = require('express');
-const cryptojs = require('crypto-js');
-const jwt = require('jsonwebtoken');
-const pool = require('../db/pool');
-const result = require('../utils/result');
-const config = require('../utils/config');
-
-// --- ADDED THESE IMPORTS ---
 const checkAdmin = require('../utils/checkAdmin'); 
 const authUser = require('../utils/auth');
 
 const router = express.Router();
 
-// 1. Register
+// 1. Register (Signup)
 router.post('/signup', (req, res) => {
-    const { name, email, password, mobile } = req.body;
+    const { name, email, password, mobile, role } = req.body;
+    
+    // Check if role was sent, otherwise default to 'student'
+    const userRole = (role === 'admin') ? 'admin' : 'student';
+    
     const hashedPassword = cryptojs.SHA256(password).toString();
-    // Default role is 'student'
-    const sql = `INSERT INTO users(name, email, password, mobile, role) VALUES (?,?,?,?,'student')`;
-    pool.query(sql, [name, email, hashedPassword, mobile], (error, data) => {
+    
+    const sql = `INSERT INTO users(name, email, password, mobile, role) VALUES (?,?,?,?,?)`;
+    pool.query(sql, [name, email, hashedPassword, mobile, userRole], (error, data) => {
         res.send(result.createResult(error, data));
     });
 });
 
-// 2. Login
+// 2. Login (Signin)
 router.post('/signin', (req, res) => {
     const { email, password } = req.body;
     const hashedPassword = cryptojs.SHA256(password).toString();
@@ -84,7 +73,6 @@ router.get('/all-students', authUser, checkAdmin, (req, res) => {
     });
 });
 
-
 // 4. Change Password
 router.put('/change-password', authUser, (req, res) => {
     const { oldPassword, newPassword } = req.body;
@@ -93,7 +81,7 @@ router.put('/change-password', authUser, (req, res) => {
 
     const hashedOldPassword = cryptojs.SHA256(oldPassword).toString();
 
-    // 1. Verify Old Password
+    // Verify Old Password
     const checkSql = `SELECT * FROM users WHERE id = ? AND password = ?`;
     pool.query(checkSql, [userId, hashedOldPassword], (error, data) => {
         if (error) {
@@ -104,7 +92,7 @@ router.put('/change-password', authUser, (req, res) => {
             return res.send(result.createResult("Old password does not match"));
         }
 
-        // 2. Update to New Password
+        // Update to New Password
         const hashedNewPassword = cryptojs.SHA256(newPassword).toString();
         const updateSql = `UPDATE users SET password = ? WHERE id = ?`;
         
@@ -115,51 +103,6 @@ router.put('/change-password', authUser, (req, res) => {
                 res.send(result.createResult(null, "Password changed successfully"));
             }
         });
-    });
-});
-
-module.exports = router;2. Check if a role was sent, otherwise default to 'student'
-    // This allows you to send "admin", but if you send nothing, they become a student.
-    const userRole = (role === 'admin') ? 'admin' : 'student';
-
-    // 3. Update SQL to include the 'role' column
-    const sql = `INSERT INTO users(name, email, password, mobile, role) VALUES (?,?,?,?,?)`;
-    
-    const hashedPassword = cryptojs.SHA256(password).toString();
-    
-    // 4. Pass 'userRole' to the query parameters
-    pool.query(sql, [name, email, hashedPassword, mobile, userRole], (error, data) => {
-        res.send(result.createResult(error, data));
-    });
-});
-
-router.post('/signin', (req, res) => {
-    const { email, password } = req.body;
-    const hashedPassword = cryptojs.SHA256(password).toString();
-    const sql = `SELECT * FROM users WHERE email = ? AND password = ?`;
-    
-    pool.query(sql, [email, hashedPassword], (error, data) => {
-        if (error) {
-            res.send(result.createResult(error));
-        } else if (data.length === 0) {
-            res.send(result.createResult("Invalid email or password"));
-        } else {
-            const user = data[0];
-            
-            // PAYLOAD: Include the role here!
-            const payload = {
-                uid: user.uid,
-                email: user.email,
-                role: user.role 
-            };
-            
-            const token = jwt.sign(payload, config.SECRET);
-            res.send(result.createResult(null, { 
-                token, 
-                name: user.name, 
-                role: user.role 
-            }));
-        }
     });
 });
 
